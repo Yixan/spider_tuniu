@@ -6,16 +6,31 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import re
 
+import DButil
 
-class TripPipeline(object):
+class ScenicPipeline(object):
     def process_item(self, item, spider):
-        with open("my_out.txt", 'a', encoding="utf-8") as fp:
-            try:
-                fp.write(item['name'] + '\t' + item['satis'] + '\t' + item['pos'] + '\n')
-
-            except UnicodeEncodeError as err:  # 使用as将异常对象，并将其赋值给一个标识符
-                print('File Error:' + str(err))  # ‘+’用于字符串直接的连接
-
-            finally:
-                pass
+        str = "INSERT INTO scenic(name, pos, satis,province,city,note," \
+              "introduction,comment,transport) VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s') "
+        note="".join(item['note'])
+        intro="".join(item['introduction'])
+        trans="".join(item['transport'])
+        sql = str % (item['name'], item['pos'], item['satis'], item['province'],
+                     item['city'],  note, intro, item['comment'],
+                     trans)
+        DButil.execute(sql)
         return item
+class AreaPipeline(object):
+    def process_item(self, item, spider):
+        print(item['name']+","+item['number'])
+        sql = "INSERT INTO area(area, number) VALUES (" + "'" + item['name'] + "'" + ", " + "'" + item['number']+ "'" + ")"
+        DButil.execute(sql)
+        return item
+
+class CityPipeline(object):
+    def process_item(self, item, spider):
+        print(item['name']+","+item['number']+item['area'])
+        sql = "INSERT INTO city(city, number, area) VALUES (" + "'" + item['name'] + "'" + ", " + "'" + item['number']+ "'" + ", " + "'"+item['area']+ "'"+ ")"
+        DButil.execute(sql)
+        return item
+    pass
